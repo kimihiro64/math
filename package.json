@@ -1,10 +1,16 @@
 {
-  "name": "electron-quick-start",
+  "name": "math-helper",
   "version": "1.0.0",
   "description": "A minimal Electron application",
-  "main": "main.js",
+  "main": "dist/main/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dev": "electron-webpack dev",
+    "dev-debug": "electron-webpack dev --inspect=5858",
+    "compile": "electron-webpack",
+    "unpacked": "yarn compile && electron-builder -mwl --dir -c.compression=store -c.mac.identity=null",
+    "build": "yarn compile && electron-builder -w -c.compression=maximum",
+    "lint": "npx eslint . --fix"
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -16,7 +22,62 @@
   ],
   "author": "GitHub",
   "license": "CC0-1.0",
+  "build": {
+    "productName": "MathHelper",
+    "appId": "com.qwerzog.app",
+    "directories": {
+      "output": "build"
+    },
+    "files": [
+      "dist/electron/**/*"
+    ],
+    "extraResources": [
+      "static"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  },
   "devDependencies": {
-    "electron": "^20.1.0"
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.18.13",
+    "@babel/eslint-parser": "^7.18.9",
+    "@babel/node": "^7.18.10",
+    "@babel/plugin-syntax-flow": "^7.18.6",
+    "@babel/plugin-transform-react-jsx": "^7.18.10",
+    "@babel/preset-env": "^7.18.10",
+    "electron": "^20.1.0",
+    "electron-builder": "^23.3.3",
+    "electron-webpack": "^2.8.2",
+    "eslint": "^8.23.0",
+    "eslint-import-resolver-babel-module": "^5.3.1",
+    "eslint-plugin-eslint-comments": "^3.2.0",
+    "eslint-plugin-flowtype": "^8.0.3",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jsx-a11y": "^6.6.1",
+    "eslint-plugin-promise": "^6.0.1",
+    "eslint-plugin-react": "^7.31.1",
+    "eslint-plugin-react-hooks": "^4.6.0"
+  },
+  "dependencies": {
+    "@babel/plugin-transform-runtime": "^7.18.10",
+    "babel-plugin-module-resolver": "^4.1.0",
+    "electron-log": "^4.4.8",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "url": "^0.11.0",
+    "webpack": "4.42.1"
+  },
+  "electronWebpack": {
+    "renderer": {
+      "webpackConfig": "renderer.webpack.js"
+    }
   }
 }
