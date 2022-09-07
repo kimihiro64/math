@@ -10,7 +10,8 @@
     "compile": "electron-webpack",
     "unpacked": "yarn compile && electron-builder -mwl --dir -c.compression=store -c.mac.identity=null",
     "build": "yarn compile && electron-builder -w -c.compression=maximum",
-    "lint": "npx eslint . --fix"
+    "lint": "npx eslint . --fix",
+    "parse": "equation-parser json"
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -66,6 +67,7 @@
     "@babel/plugin-transform-runtime": "^7.18.10",
     "babel-plugin-module-resolver": "^4.1.0",
     "electron-log": "^4.4.8",
+    "equation-parser": "^0.3.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "url": "^0.11.0",

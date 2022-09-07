@@ -190,7 +190,7 @@ module.exports = {
     'lines-around-comment': 'off',
     'lines-around-directive': 'off', // Deprecated
     'lines-between-class-members': ['error', 'always', { exceptAfterSingleLine: false }],
-    'max-classes-per-file': ['error', 1],
+    'max-classes-per-file': ['error', 3],
     'max-depth': 'off',
     'max-len': ['error', 280, 2, {
       ignoreComments: true,
@@ -344,6 +344,7 @@ module.exports = {
         '$scope', // for Angular 1 scopes
         'staticContext', // for ReactRouter context
         'context', // for Metro resolver
+        'tree', // trees
       ],
     }],
     'no-path-concat': 'error',
@@ -518,7 +519,7 @@ module.exports = {
     'no-unsafe-optional-chaining': ['error', { disallowArithmeticOperators: true }],
     'no-unused-expressions': 'error',
     'no-unused-labels': 'error',
-    'no-unused-vars': ['error', { vars: 'all', args: 'after-used', ignoreRestSiblings: true, argsIgnorePattern: 'prevProps|nextProps|prevState|state|ownProps|navigation' }],
+    'no-unused-vars': ['error', { vars: 'all', args: 'after-used', ignoreRestSiblings: true, argsIgnorePattern: 'prevProps|nextProps|prevState|state|ownProps|navigation|parent|context' }],
     'no-use-before-define': ['error', { functions: true, classes: true, variables: true }],
     'no-useless-backreference': 'error',
     'no-useless-call': 'error',
@@ -1016,6 +1017,7 @@ module.exports = {
     __DEV__: true,
     __dirname: false,
     __fbBatchedBridgeConfig: false,
+    __static: false,
     alert: false,
     cancelAnimationFrame: false,
     cancelIdleCallback: false,

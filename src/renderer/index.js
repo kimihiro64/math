@@ -6,13 +6,13 @@
 // process.
 
 import React, { StrictMode } from 'react';
-import * as ReactDOMClient from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import electronLog from 'electron-log';
 import App from './App';
 
 const logger = electronLog.scope('renderer');
 
-(async () => {
+(() => {
   process.on('uncaughtException', (error) => {
     logger.error(error);
   });
@@ -22,10 +22,11 @@ const logger = electronLog.scope('renderer');
   };
 
   const container = document.getElementById('app');
-  const root = ReactDOMClient.createRoot(container);
+  const root = createRoot(container);
   
   root.render(
     <StrictMode>
       <App />
-    </StrictMode>);
+    </StrictMode>
+  );
 })();
