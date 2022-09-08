@@ -83,7 +83,7 @@ function signString(sign) {
 
 function checkNodeSum(tree, type, values, leftSign) {
   if (sumTypes.includes(tree.a.type) === true) {
-    const childLeftSign = signMap(tree.a.type);
+    const childLeftSign = signMap[tree.a.type];
 
     checkNodeSum(tree.a, type, values, childLeftSign);
   }
@@ -92,7 +92,7 @@ function checkNodeSum(tree, type, values, leftSign) {
   }
 
   if (sumTypes.includes(tree.b.type) === true) {
-    const childLeftSign = signMap(tree.b.type);
+    const childLeftSign = signMap[tree.b.type];
     
     checkNodeSum(tree.b, type, values, childLeftSign);
   }
@@ -167,6 +167,101 @@ function stringFactors(factors) {
   return string;
 }
 
+function productStringDisplay(total, stringValue) {
+  if (total === 1) {
+    return stringValue;
+  }
+  else if (total === -1) {
+    return '-' + stringValue;
+  }
+  else {
+    return total + stringValue;
+  }
+}
+
+function productDisplay(total, stringValue) {
+  if (total === 0) {
+    return 0;
+  }
+
+  if (stringValue !== '') {
+    return productStringDisplay(total, stringValue);
+  }
+
+  return total;
+}
+
+function factorDisplay(factors, variables) {
+  let stringValue = '';
+  let total = 1;
+
+  for (let i = 0; i < factors.length; i++) {
+    const factor = factors[i];
+    const evaluatedFactor = factor.evaluate(variables);
+
+    if (typeof evaluatedFactor === 'string') {
+      if (stringValue !== '') {
+        stringValue += '*';
+      }
+
+      stringValue += evaluatedFactor;
+    }
+    else {
+      total *= evaluatedFactor;
+    }
+  }
+
+  return { numeric: total, string: stringValue };
+}
+
+function divideMixed(numerator, denominator) {
+  const numeric = numerator.numeric / denominator.numeric;
+  let string = numerator.string;
+
+  if (denominator.string.length > 0) {
+    string += '/(' + denominator.string + ')';
+  }
+
+  return productDisplay(numeric, string);
+}
+
+function isSignString(value, sign) {
+  return sign === signs.both || (typeof value === 'string' && sign === signs.negative);
+}
+
+function signDisplay(value, sign) {
+  if (isSignString(value, sign) === true) {
+    return signString(sign) + value;
+  }
+  else if (sign === signs.negative) {
+    return value * -1;
+  }
+
+  return value;
+}
+
+function sumDisplay(terms, variables) {
+  let total = 0;
+  let stringValue = '';
+
+  for (let i = 0; i < terms.length; i++) {
+    const term = terms.evaluate(variables);
+
+    if (typeof term === 'string') {
+      if (stringValue !== '') {
+        stringValue += ' + ';
+      }
+
+      stringValue += term;
+    }
+    else {
+      total += term;
+    }
+  }
+
+  return { numeric: total, string: stringValue };
+}
+
 export class Expression {
   stringFunc() {
     let string = '';
@@ -183,7 +278,7 @@ export class Expression {
 
     string += ')';
 
-    return string;
+    return signString(this.sign) + string;
   }
 
   stringConstant() {
@@ -199,19 +294,19 @@ export class Expression {
   }
 
   stringQuotient() {
-    return stringFactors(this.factors.numerator) + '/(' + stringFactors(this.factors.denominator) + ')';
+    return signString(this.sign) + stringFactors(this.factors.numerator) + '/(' + stringFactors(this.factors.denominator) + ')';
   }
 
   stringProduct() {
-    return stringFactors(this.factors.numerator);
+    return signString(this.sign) + stringFactors(this.factors.numerator);
   }
 
   stringPower() {
-    return '(' + this.base.toString() + ')^(' + this.exponent.toString() + ')';
+    return signString(this.sign) + '(' + this.base.toString() + ')^(' + this.exponent.toString() + ')';
   }
 
   stringExpression() {
-    return '(' + this.child.toString() + ')';
+    return signString(this.sign) + '(' + this.child.toString() + ')';
   }
 
   stringSum() {
@@ -221,7 +316,7 @@ export class Expression {
       string += this.terms[i].toString();
 
       if (i !== (this.terms.length - 1)) {
-        if (signString(this.terms[i].sign) === '') {
+        if (signString(this.terms[i + 1].sign) === '') {
           string += ' + ';
         }
         else {
@@ -307,6 +402,7 @@ export class Expression {
 
     if (context.constants && context.constants[tree.name]) {
       this.type = types.constant;
+      this.value = null;
 
       if (context.constants[tree.name].value) {
         this.value = context.constants[tree.name].value;
@@ -372,6 +468,87 @@ export class Expression {
     this.type = types.matrix;
   }
 
+  evaluateFunc(variables) {
+    const evaluatedArgs = [];
+
+    for (let i = 0; i < this.args.length; i++) {
+      const arg = this.args[i];
+      const evaluatedArg = arg.evaluate(variables);
+
+      evaluatedArgs.push(evaluatedArg);
+    }
+
+    return this.func(...evaluatedArgs);
+  }
+
+  evaluateConstant(variables) {
+    return this.value || variables[this.name] || this.name;
+  }
+
+  evaluateVariable(variables) {
+    return variables[this.name] || this.name;
+  }
+
+  evaluateNumber() {
+    return this.value;
+  }
+
+  evaluateQuotient(variables) {
+    const numerator = factorDisplay(this.factors.numerator, variables);
+    const denominator = factorDisplay(this.factors.denominator, variables);
+    const quotient = divideMixed(numerator, denominator);
+
+    return quotient;
+  }
+
+  evaluateProduct(variables) {
+    const factor = factorDisplay(this.factors.numerator, variables);
+
+    return productDisplay(factor.numeric, factor.string);
+  }
+
+  evaluatePower(variables) {
+    const base = this.base.evaluate(variables);
+    const exponent = this.exponent.evaluate(variables);
+
+    if (typeof base !== 'string' && typeof exponent !== 'string') {
+      return base ** exponent;
+    }
+    else {
+      return '(' + base + ')^(' + exponent + ')';
+    }
+  }
+
+  evaluateExpression(variables) {
+    return this.child.evaluate(variables);
+  }
+
+  evaluateSum(variables) {
+    const sum = sumDisplay(this.terms, variables);
+
+    if (sum.string !== '') {
+      return sum.numeric + ' + ' + sum.string;
+    }
+
+    return sum.numeric;
+  }
+
+  evaluateMatrix(variables) {
+    const n = this.n;
+    const m = this.m;
+    const values = [];
+
+    for (let i = 0; i < m; i++) {
+      values[i] = [];
+
+      for (let j = 0; j < n; j++) {
+        values[i][j] = this.values[i][j].evaluate(variables);
+      }
+    }
+
+    return values.toString();
+  }
+
   constructor(tree, parent = null, context = {}) {
     this.parent = parent;
     this.context = context;
@@ -410,13 +587,42 @@ export class Expression {
       [types.matrix]: this.stringMatrix.bind(this),
     };
 
+    this.evaluationHandlers = {
+      [types.func]: this.evaluateFunc.bind(this),
+      [types.constant]: this.evaluateConstant.bind(this),
+      [types.variable]: this.evaluateVariable.bind(this),
+      [types.number]: this.evaluateNumber.bind(this),
+      [types.quotient]: this.evaluateQuotient.bind(this),
+      [types.product]: this.evaluateProduct.bind(this),
+      [types.power]: this.evaluatePower.bind(this),
+      [types.expression]: this.evaluateExpression.bind(this),
+      [types.sum]: this.evaluateSum.bind(this),
+      [types.matrix]: this.evaluateMatrix.bind(this),
+    };
+
     if (tree.sign) {
       this.sign = tree.sign;
     }
   }
 
   toString() {
-    return this.stringHandlers[this.type]();
+    let value = this.stringHandlers[this.type]();
+
+    if (typeof value === 'string') {
+      value = value.replaceAll('+ -', '- ');
+    }
+
+    return value;
+  }
+
+  evaluate(variables) {
+    let value = signDisplay(this.evaluationHandlers[this.type](variables), this.sign);
+
+    if (typeof value === 'string') {
+      value = value.replaceAll('+ -', '- ');
+    }
+
+    return value;
   }
 }
 
@@ -431,6 +637,12 @@ class Relation {
 
   toString() {
     return this.lhs.toString() + ' ' + equalityTextMap[this.type] + ' ' + this.rhs.toString();
+  }
+
+  evaluate(variables) {
+    const value = this.lhs.evaluate(variables) + ' ' + equalityTextMap[this.type] + ' ' + this.rhs.evaluate(variables);
+
+    return value;
   }
 }
 
@@ -460,5 +672,9 @@ export class Statement {
 
   toString() {
     return this.result.toString();
+  }
+
+  evaluate(variables) {
+    return this.result.evaluate(variables);
   }
 }
